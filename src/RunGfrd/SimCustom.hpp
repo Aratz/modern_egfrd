@@ -1,4 +1,5 @@
 #pragma once
+#include <fstream>
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -10,7 +11,7 @@ public:
 
    explicit SimCustom() noexcept
    {
-      world_size_ = 1e-7;
+      world_size_ = 1e-6;
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -24,6 +25,7 @@ public:
       if (args.isparam(i) && args.option(i) == "m" && args.isvalue_NP(i + 1)) maintenance_step_ = std::stoi(args.option(++i));
       else if (args.isparam(i) && args.option(i) == "mf" && args.isvalue_F(i + 1)) simstate_file_ = args.option(++i);
       else if (args.isparam(i) && args.option(i) == "e" && args.isvalue_D(i + 1)) end_time_ = std::stod(args.option(++i));
+      else if (args.isparam(i) && args.option(i) == "in" && args.isvalue_F(i + 1)) siminput_file_ = args.option(++i);
       else return Simulation::HandleCommandArguments(i, args);
       return -1;
    }
@@ -36,6 +38,7 @@ public:
       std::cout << "        [-h,-?,--help]        Print command line usage information" << std::endl;
       std::cout << "        [-m N]                Maintenance every N steps\n";
       std::cout << "        [-mf file]            Maintenance output file\n";
+      std::cout << "        [-in file]            Input file\n";
       std::cout << "        [-e time]             End simulation after model time in seconds\n";
    }
 
@@ -62,30 +65,46 @@ protected:
    bool SetupSimulation() override
    {
       // Construct your simulation model here
-      s1 = model_.add_species_type(SpeciesType("A", model_.get_def_structure_type_id(), 1e-12, 1e-9));
-      s2 = model_.add_species_type(SpeciesType("B", model_.get_def_structure_type_id(), 1e-12, 1e-9));
-      s3 = model_.add_species_type(SpeciesType("C", model_.get_def_structure_type_id(), 1e-12, 1e-9));
+      DNA = model_.add_species_type(SpeciesType("DNA", model_.get_def_structure_type_id(), 0., 1e-9));
+      DNA_bound = model_.add_species_type(SpeciesType("DNA_bound", model_.get_def_structure_type_id(), 0., 1e-9));
+      Delta = model_.add_species_type(SpeciesType("Delta", model_.get_def_structure_type_id(), 1e-12, 1e-9));
+      Notch = model_.add_species_type(SpeciesType("Notch", model_.get_def_structure_type_id(), 1e-12, 1e-9));
+
+      // Add some rules
+      // transcription
+      rules_.add_reaction_rule(ReactionRule(DNA, 100, std::vector < SpeciesTypeID > {DNA, Delta}));
+
+      // Degradation
+      rules_.add_reaction_rule(ReactionRule(Delta, 1, std::vector < SpeciesTypeID > {}));
+      rules_.add_reaction_rule(ReactionRule(Notch, 1, std::vector < SpeciesTypeID > {}));
+
+      //Binding/unbinding
+      rules_.add_reaction_rule(ReactionRule(ReactionRule::reactants(DNA, Notch), 10, std::vector < SpeciesTypeID > {DNA_bound}));
+      rules_.add_reaction_rule(ReactionRule(DNA_bound, 1, std::vector < SpeciesTypeID > {DNA, Notch}));
 
       // Create the world and simulator
       Simulation::SetupSimulation();
 
-      // Add particles (three layers)
-      world_.throwInParticles(s1, 24, rng_, false, Vector3(0, 0, 0), Vector3(world_size_, world_size_/3, world_size_) );
-      world_.throwInParticles(s2, 24, rng_, false, Vector3(0, world_size_/3, 0), Vector3(world_size_, 2*world_size_/3, world_size_));
-      world_.throwInParticles(s3, 24, rng_, false, Vector3(0, 2*world_size_/3, 0), Vector3(world_size_, world_size_, world_size_));
+      // Add particles
 
-      // Add some rules
-      rules_.add_reaction_rule(ReactionRule(s1, 24, std::vector < SpeciesTypeID > {s2}));
-      rules_.add_reaction_rule(ReactionRule(s2, 24, std::vector < SpeciesTypeID > {s3}));
-      rules_.add_reaction_rule(ReactionRule(s3, 24, std::vector < SpeciesTypeID > {s1}));
+      StructureID wid = world_.get_def_structure_id();
+
+      std::ifstream infile(siminput_file_);
+      int sid, pid;
+      float x, y, z;
+
+      while (infile >> pid >> sid >> x >> y >> z){
+         world_.add_particle(SpeciesTypeID(sid), wid, Vector3(x, y, z));
+      }
 
       return true;
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
+   std::string siminput_file_;
 private:
-   SpeciesTypeID s1,s2,s3;
+   SpeciesTypeID DNA, DNA_bound, Delta, Notch;
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------
