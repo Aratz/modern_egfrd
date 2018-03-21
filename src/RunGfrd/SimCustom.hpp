@@ -44,6 +44,8 @@ public:
       std::cout << "        [-in file]            Input file\n";
       std::cout << "        [-out file]           Output file\n";
       std::cout << "        [-e time]             End simulation after model time in seconds\n";
+      std::cout << "        [-seed seed]          Set seed\n";
+      std::cout << "        [-wsize wsize]        Set world size\n";
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
