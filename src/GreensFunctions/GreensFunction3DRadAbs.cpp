@@ -104,7 +104,7 @@ double GreensFunction3DRadAbs::alpha0_i(int i) const
    // We know the range of the solution from - Pi/2 <= atan <= Pi/2.
    double interval = M_PI / (a_ - sigma_);
    double low = i * interval + std::numeric_limits<double>::epsilon();
-   double high = (i + 1) * interval;
+   double high = (i + 1.1) * interval;
 
    root_fsolver_wrapper solver;
    solver.set(&F, low, high);
