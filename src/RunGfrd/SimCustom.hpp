@@ -73,8 +73,8 @@ protected:
       // Construct your simulation model here
       DNA = model_.add_species_type(SpeciesType("DNA", model_.get_def_structure_type_id(), 0., 1e-9));
       DNA_bound = model_.add_species_type(SpeciesType("DNA_bound", model_.get_def_structure_type_id(), 0., 1e-9));
-      Delta = model_.add_species_type(SpeciesType("Delta", model_.get_def_structure_type_id(), 1e-12, 1e-9));
-      Notch = model_.add_species_type(SpeciesType("Notch", model_.get_def_structure_type_id(), 1e-12, 1e-9));
+      Delta = model_.add_species_type(SpeciesType("Delta", model_.get_def_structure_type_id(), 10e-12, 1e-9));
+      Notch = model_.add_species_type(SpeciesType("Notch", model_.get_def_structure_type_id(), 10e-12, 1e-9));
 
       // Create the world and simulator
       Simulation::SetupSimulation();
