@@ -105,7 +105,7 @@ protected:
       rules_.add_reaction_rule(ReactionRule(DNA_bound, 25, std::vector < SpeciesTypeID > {DNA, Notch}));
 
       //Set up output file
-      pp_ = std::make_unique<ParticlePositions>(simulator_, end_time_/100);
+      pp_ = std::make_unique<ParticlePositions>(simulator_, end_time_/10);
 
       simulator_->add_extrnal_event(0, pp_.get());
       outstream.open(simoutput_file_, std::fstream::out | std::fstream::trunc);
